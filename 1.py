@@ -63,7 +63,6 @@ class SingleLinkedList:
         return result_str
 
 
-
 def init_figures(path):
     with open(path) as file:
         inputData = file.read().split("\n")
@@ -84,35 +83,41 @@ def get_death_points_for_horse(pawn):
     return first_point, second_point
 
 
-def take_step_horse(queue: deque, position: SingleLinkedList):
+def take_step_horse(stack: deque, position: SingleLinkedList):
     position_coords = position.value
-    for dy in range(-2, 3, 4):
-        for dx in range(-1, 2, 2):
-            queue.append(
-                SingleLinkedList(
-                    FigureCoordinates(position_coords.horizontal + dy,
-                                      position_coords.vertical + dx),
-                    position
-                )
-            )
-    for dx in range(-2, 3, 4):
-        for dy in range(-1, 2, 2):
-            queue.append(
-                SingleLinkedList(
-                    FigureCoordinates(position_coords.horizontal + dy,
-                                      position_coords.vertical + dx),
-                    position
-                )
-            )
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal + 1, position_coords.vertical - 2),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal - 1, position_coords.vertical - 2),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal - 2, position_coords.vertical - 1),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal - 2, position_coords.vertical + 1),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal - 1, position_coords.vertical + 2),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal + 1, position_coords.vertical + 2),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal + 2, position_coords.vertical + 1),
+        position))
+    stack.append(SingleLinkedList(FigureCoordinates(
+        position_coords.horizontal + 2, position_coords.vertical - 1),
+        position))
 
 
 def find_path(horse: FigureCoordinates, pawn: FigureCoordinates):
-    queue = deque()
+    stack = deque()
     death_horse_points = get_death_points_for_horse(pawn)
     visited_points = set()
-    queue.append(SingleLinkedList(horse, None))
-    while len(queue) != 0:
-        current_point = queue.popleft()
+    stack.append(SingleLinkedList(horse, None))
+    while len(stack) != 0:
+        current_point = stack.pop()
         point_coords = current_point.value
         if 1 > point_coords.horizontal or point_coords.horizontal > 8 \
                 or 1 > point_coords.vertical or point_coords.vertical > 8:
@@ -124,7 +129,7 @@ def find_path(horse: FigureCoordinates, pawn: FigureCoordinates):
         visited_points.add(str(point_coords))
         if point_coords == pawn:
             return current_point
-        take_step_horse(queue, current_point)
+        take_step_horse(stack, current_point)
 
 
 def write_result(path_to_file, result_path):
