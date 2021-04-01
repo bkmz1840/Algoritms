@@ -80,6 +80,9 @@ def get_count_connectivity_components(graph):
     while len(queue) != 0:
         current_node = queue.popleft()
         if str(current_node) in visited_nodes:
+            if len(queue) == 0:
+                result.append(current_connectivity_component)
+                return result
             continue
         visited_nodes.add(str(current_node))
         current_connectivity_component.append(current_node)
@@ -99,6 +102,7 @@ def get_count_connectivity_components(graph):
 def format_result(result):
     formatted_result = str(len(result)) + "\n"
     for connectivity_component in result:
+        connectivity_component.sort(key=lambda node: int(node.name))
         formatted_result += " ".join(map(str, connectivity_component)) + " 0\n"
     return formatted_result
 
