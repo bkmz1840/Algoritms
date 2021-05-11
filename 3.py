@@ -20,6 +20,12 @@ class Node:
     def add_edge(self, other_node, weight):
         self.edges.append(Edge(self, other_node, weight))
 
+    def get_edge(self, other_node_name):
+        for edge in self.edges:
+            if edge.right_node.name == other_node_name:
+                return edge
+        return None
+
     def __str__(self):
         return str(self.name)
 
@@ -58,48 +64,55 @@ def init_graph(path):
     return result, start_node, finish_node
 
 
+key_white = "white"
+key_grey = "grey"
+key_black = "black"
+
+
 def make_search_in_deep(node, nodes):
+    global key_white, key_grey, key_black
     stack = deque()
     stack.append(node)
     visited_nodes = set()
     while len(stack) > 0:
         current_node = stack.pop()
         if current_node.name in visited_nodes \
-                or current_node.name in nodes["grey"] \
-                or current_node.name in nodes["black"]:
+                or current_node.name in nodes[key_grey] \
+                or current_node.name in nodes[key_black]:
             continue
-        nodes["white"].remove(current_node.name)
-        nodes["grey"].add(current_node.name)
+        nodes[key_white].remove(current_node.name)
+        nodes[key_grey].add(current_node.name)
         visited_nodes.add(current_node.name)
         for edge in current_node.edges:
             stack.append(edge.right_node)
 
 
 def top_sort(graph: Graph, start):
+    global key_white, key_grey, key_black
     nodes = {
-        "white": set(),
-        "grey": set(),
-        "black": set()
+        key_white: set(),
+        key_grey: set(),
+        key_black: set()
     }
     for node in graph.nodes:
-        nodes["white"].add(node.name)
+        nodes[key_white].add(node.name)
     k = len(graph.nodes)
     numbers_nodes = {}
-    while len(nodes["white"]) > 0:
-        if len(nodes["white"]) == len(graph.nodes):
+    while len(nodes[key_white]) > 0:
+        if len(nodes[key_white]) == len(graph.nodes):
             current_white_node_name = start
-            nodes["white"].remove(start)
+            nodes[key_white].remove(start)
         else:
-            current_white_node_name = nodes["white"].pop()
+            current_white_node_name = nodes[key_white].pop()
         current_white_node = graph.get_node_by_name(
             current_white_node_name)
-        nodes["white"].add(current_white_node_name)
+        nodes[key_white].add(current_white_node_name)
         make_search_in_deep(current_white_node, nodes)
-        while len(nodes["grey"]) > 0:
-            node_name = nodes["grey"].pop()
+        while len(nodes[key_grey]) > 0:
+            node_name = nodes[key_grey].pop()
             node = graph.get_node_by_name(int(node_name))
             if is_node_black(node, nodes):
-                nodes["black"].add(node.name)
+                nodes[key_black].add(node.name)
                 numbers_nodes[node_name] = k
                 k -= 1
     return numbers_nodes
@@ -141,13 +154,12 @@ def search_max_path(graph, start_node, finish_node):
                 prev[v] = k
     path = []
     cur_node = finish_node - 1
-    sum_weights = d[cur_node]
     while True:
         if cur_node == -1:
             return None, 0
         path.append(cur_node + 1)
         if cur_node == start_node - 1:
-            return path, sum_weights
+            return path[::-1]
         cur_node = prev[cur_node]
 
 
@@ -155,7 +167,20 @@ def rename_nodes_in_path(path, names):
     result = []
     for node in path:
         result.append(names[node])
-    return result[::-1]
+    return result
+
+
+def sum_path_weights(graph: Graph, path):
+    result = 0
+    for i in range(0, len(path) - 1):
+        graph_node = graph.get_node_by_name(path[i])
+        result += graph_node.get_edge(path[i + 1]).weight
+    return result
+
+
+def print_result(path_to_file, result):
+    with open(path_to_file, "w+") as file:
+        file.write(result)
 
 
 def main():
@@ -164,13 +189,17 @@ def main():
     old_names = rename_nodes(graph, new_nodes_names)
     start_node = new_nodes_names[start_node]
     finish_node = new_nodes_names[finish_node]
-    path, sum_weights = search_max_path(graph, start_node, finish_node)
+    path = search_max_path(graph, start_node, finish_node)
     if path is None:
-        print("N")
+        result = "N"
     else:
-        print(rename_nodes_in_path(path, old_names))
-        print(sum_weights)
+        result = "Y\n"
+        sum_weights = sum_path_weights(graph, path)
+        path = rename_nodes_in_path(path, old_names)
+        result += " ".join(map(str, path)) + '\n'
+        result += str(sum_weights)
+    print_result("./output.txt", result)
 
 
 if __name__ == '__main__':
-    print(os.environ.get("DJANGO_PLACE_REMEMBER_TOKEN"))
+    main()
