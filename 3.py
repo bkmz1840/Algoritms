@@ -1,5 +1,4 @@
 from collections import deque
-import os
 
 
 class Edge:
@@ -156,7 +155,7 @@ def search_max_path(graph, start_node, finish_node):
     cur_node = finish_node - 1
     while True:
         if cur_node == -1:
-            return None, 0
+            return None
         path.append(cur_node + 1)
         if cur_node == start_node - 1:
             return path[::-1]
